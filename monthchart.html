@@ -9,7 +9,21 @@
 <script>
     async function init() {
         //const cacounties = await d3.csv('ca_counties.csv', d3.autoType);
-        const bloomdata = await d3.csv('fhab_bloomreport.csv', d3.autoType);
+        const bloomData = await d3.csv('fhab_bloomreport.csv', d3.autoType);
+        const monthNames = ["January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+        ];
+
+        selectedCountyID = 17;
+        const countyData = bloomData.filter(filterbyCounty);
+        function filterbyCounty(d) {
+            return d.CountyID == selectedCountyID;
+        };
+
+        var countbyMonth = d3.nest()
+            .key(function(d) {return monthNames[d.ObservationDate.getMonth()];})
+            .rollup(function(v) {return v.length;})
+            .entries(countyData);
 
         //Width and height
         var w = 760;
@@ -22,6 +36,31 @@
             .attr("height", h);
         var g = svg.append('g').attr('id', 'barchartcontainer')
             .attr('transform', 'translate('+margin+','+margin+')');
+
+        var xs = d3.scaleBand().domain(monthNames).range([0, w-2*margin]);
+        var ys = d3.scaleLinear().domain([0, d3.max(countbyMonth.map(d => d.value))]).range([h-2*margin, 0]);
+
+        g.selectAll('rect').data(countbyMonth).enter().append('rect')
+            .attr('x', function (d) {
+                return xs(d.key);
+            })
+            .attr('y', function (d) {
+                return ys(d.value);
+            })
+            .attr('width', xs.bandwidth())
+            .attr('height', function (d) {return h-2*margin-ys(d.value);});
+        d3.select('svg').append('g')
+            .attr('transform', 'translate('+margin+','+margin+')')
+            .call(d3.axisLeft(ys));
+        d3.select('svg').append('g')
+            .attr('transform', 'translate('+margin+','+(h-margin)+')')
+            .call(d3.axisBottom(xs))
+            .selectAll("text")
+            .attr("y", 0)
+            .attr("x", -9)
+            .attr("dy", ".35em")
+            .attr("transform", "rotate(270)")
+            .style("text-anchor", "end");
     }
 </script>
 </body>
