@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script type="text/javascript" src="d3/d3.js"></script>
+    <title>Month Chart</title>
+</head>
+<body onload='init()'>
+<script>
+    async function init() {
+        //const cacounties = await d3.csv('ca_counties.csv', d3.autoType);
+        const bloomdata = await d3.csv('fhab_bloomreport.csv', d3.autoType);
+
+        //Width and height
+        var w = 760;
+        var h = 600;
+        var margin = 80;
+
+        var svg = d3.select("body")
+            .append("svg")
+            .attr("width", w)
+            .attr("height", h);
+        var g = svg.append('g').attr('id', 'barchartcontainer')
+            .attr('transform', 'translate('+margin+','+margin+')');
+    }
+</script>
+</body>
+</html>
