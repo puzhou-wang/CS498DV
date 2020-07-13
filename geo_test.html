@@ -31,6 +31,9 @@
         .attr("width", w)
         .attr("height", h);
     var g = d3.select('svg').append('g').attr('id', 'mapcontainer')
+
+    var countyName = window.location.search.substring(8)
+
     //Load CA county map
     d3.json("cb_2014_us_county_5m.json")
     .then(function(ca) {

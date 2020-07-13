@@ -7,21 +7,22 @@
 </head>
 <body onload='init()'>
 <script>
+    //Width and height
+    var w = 760;
+    var h = 600;
+    var margin = 80;
+
+    var svg = d3.select("body")
+        .append("svg")
+        .attr("width", w)
+        .attr("height", h);
+    var g = svg.append('g').attr('id', 'plotcontainer')
+        .attr('transform', 'translate('+margin+','+margin+')');
+
     async function init() {
         const cacounties = await d3.csv('ca_counties.csv', d3.autoType);
         const bloomdata = await d3.csv('fhab_bloomreport.csv', d3.autoType);
 
-        //Width and height
-        var w = 760;
-        var h = 600;
-        var margin = 80;
-
-        var svg = d3.select("body")
-            .append("svg")
-            .attr("width", w)
-            .attr("height", h);
-        var g = svg.append('g').attr('id', 'barchartcontainer')
-            .attr('transform', 'translate('+margin+','+margin+')');
         var countbyID = d3.nest()
             .key(function(d) {return cacounties[d.CountyID-1].countyName;})
             .rollup(function(v) {return v.length;})
@@ -34,6 +35,14 @@
 
         var xs = d3.scaleBand().domain(listCountyName).range([0, w-2*margin]);
         var ys = d3.scaleLinear().domain([0, 100]).range([h-2*margin, 0]);
+
+        xs.invert = function(x) {
+            var domain = this.domain();
+            var range = this.range()
+            var scale = d3.scaleQuantize().domain(range).range(domain)
+            return scale(x)
+        };
+
         g.selectAll('rect').data(countbyID).enter().append('rect')
             .attr('x', function (d) {
                 return xs(d.key);
@@ -55,8 +64,11 @@
             .attr("dy", ".35em")
             .attr("transform", "rotate(270)")
             .style("text-anchor", "end");
+        g.selectAll('rect').on('click', function(d){
+            console.log(d.key);
+            window.open('/geo_test?county='+d.key);
+        });
     };
-
 
 </script>
 </body>
