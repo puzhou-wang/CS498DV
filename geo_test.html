@@ -38,16 +38,16 @@
     d3.json("cb_2014_us_county_5m.json")
     .then(function(ca) {
         // Join the FeatureCollection's features array to path elements
+        var selectCounty = ca.features.filter(function(d) { return d.properties.NAME == countyName; });
         g.selectAll("path")
-            .data(ca.features)
+            .data(selectCounty)
             .enter()
             .append("path")
             .attr("d", path)
             .style('fill', 'rgb(69,173,168)');
     });
-    var countbylocation
     d3.csv('fhab_bloomreport.csv').then(function(data) {
-        countbylocation = d3.nest()
+        var countbylocation = d3.nest()
             .key(function(d) {return [d.Longitude, d.Latitude];})
             .rollup(function(v) {return v.length;})
             .entries(data);
