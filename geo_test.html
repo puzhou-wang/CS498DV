@@ -21,11 +21,11 @@
     var g = d3.select('svg').append('g').attr('id', 'countycontainer')
 
     var countyName = decodeURI(window.location.search.substring(8))
-    d3.csv('ca_counties.csv', d3.autoType).then(function(cacounties){
+    d3.csv('resources/ca_counties.csv', d3.autoType).then(function(cacounties){
         var countyRow = cacounties.filter(function(d){ return d.countyName == countyName });
         var countyID = countyRow[0].countyID;
         //Load CA county map
-        d3.json("cb_2014_us_county_5m.json")
+        d3.json("resources/cb_2014_us_county_5m.json")
             .then(function(ca) {
                 // Join the FeatureCollection's features array to path elements
                 var scale  = w*3.3;
@@ -44,7 +44,7 @@
                     .attr("d", path)
                     .style('fill', 'rgb(69,173,168)');
 
-                    d3.csv('fhab_bloomreport.csv').then(function (data) {
+                    d3.csv('resources/fhab_bloomreport.csv').then(function (data) {
                         var filterData = data.filter(function (d) {
                             return d.CountyID == countyID;
                         })
