@@ -17,28 +17,28 @@
 <head>
     <meta charset="UTF-8">
     <script type="text/javascript" src="d3/d3.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
     <title>Algal Bloom in Different CA County</title>
 </head>
 <body onload='init()'>
 <header>
     <div class="container">
         <div class="row">
-            <div class="col-md-10">
-                <h1 class="logo">Freshwater Harmful Algal Bloom (FHAB) in California</h1>
-                <h4>Puzhou Wang</h4>
-            </div>
+            <h1 class="logo">Freshwater Harmful Algal Blooms (FHABs) in California</h1>
+            <h4>Puzhou Wang</h4>
         </div>
     </div>
     <div class="container">
         <div class="row">
-            <div class="col-md-10">
-                <p>Move mouse onto the bar chart for more details about the data!</p>
-                <p>Click the bar for the county of interest to see geographical distribution!</p>
-            </div>
+            <h4>Instructions:</h4>
+            <p>Move mouse onto the bar chart for more details about the data!</p>
+            <p>Click the bar for the county of interest to see geographical distribution!</p>
         </div>
     </div>
 </header>
-
+<div class="container">
+    <svg></svg>
+</div>
 <script>
     //Width and height
     var w = 680;
@@ -46,8 +46,7 @@
     var margin = 40;
     var padding = 100;
 
-    var svg = d3.select("body")
-        .append("svg")
+    var svg = d3.select("svg")
         .attr("width", w)
         .attr("height", h)
         .attr('padding', padding);
@@ -117,7 +116,7 @@
             .style("opacity", 0);
         g.selectAll('rect')
             .on('mouseover', function(d){
-                d3.select(this).style("fill", "rgb(196,92,162)");
+                d3.select(this).style("fill", "rgb(252,214,125)");
                 div.transition()
                     .duration(200)
                     .style("opacity", .9);
