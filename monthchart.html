@@ -8,17 +8,19 @@
 <body onload='init()'>
 <script>
     async function init() {
-        //const cacounties = await d3.csv('ca_counties.csv', d3.autoType);
         const bloomData = await d3.csv('fhab_bloomreport.csv', d3.autoType);
         const monthNames = ["January", "February", "March", "April", "May", "June",
             "July", "August", "September", "October", "November", "December"
         ];
 
-        selectedCountyID = 17;
+        var selectedCountyID = Number(decodeURI(window.location.search.substring(10)));
+
         const countyData = bloomData.filter(filterbyCounty);
         function filterbyCounty(d) {
             return d.CountyID == selectedCountyID;
         };
+
+        console.log(countyData);
 
         var countbyMonth = d3.nest()
             .key(function(d) {return monthNames[d.ObservationDate.getMonth()];})

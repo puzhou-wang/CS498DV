@@ -3,27 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <script type="text/javascript" src="d3/d3.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
     <title>Geo Test</title>
 </head>
 <body>
+<svg></svg>
+<a id='month-chart-button' class="btn btn-default" role="button">Month Chart</a>
 <script type="text/javascript">
-    // //Define map projection
-    // var projection = d3.geoMercator()
-    //     .center([ -120, 37 ])
-    //     .translate([ w/2, h/2 ])
-    //     .scale([ w*3.3 ]);
-    //
-    // //Define path generator
-    // var path = d3.geoPath()
-    //     .projection(projection);
-
-    //Width and height
+     //Width and height
     var w = 760;
     var h = 600;
 
     //Create SVG element and append map to the SVG
-    var svg = d3.select("body")
-        .append("svg")
+    var svg = d3.select("svg")
         .attr("width", w)
         .attr("height", h);
     var g = d3.select('svg').append('g').attr('id', 'countycontainer')
@@ -50,7 +42,7 @@
                     .enter()
                     .append("path")
                     .attr("d", path)
-                    .style('fill', 'rgb(122,164,68)');
+                    .style('fill', 'rgb(69,173,168)');
 
                     d3.csv('fhab_bloomreport.csv').then(function (data) {
                         var filterData = data.filter(function (d) {
@@ -76,22 +68,12 @@
                             })
                             .style("fill", "red");
                     });
-
-
             });
+
+        d3.select('#month-chart-button').attr('href', '/d3_test/monthchart.html?countyID='+countyID);
     });
 
 
-
-
-    // todo: need to figure out the zoom function
-    const zoom = d3
-        .zoom()
-        .scaleExtent([1,100])
-        .on("zoom", zoomHandler);
-    function zoomHandler() {
-        g.attr("transform", d3.event.transform);
-    }
 
 </script>
 </body>
