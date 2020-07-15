@@ -1,11 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
+<style>
+    div.tooltip {
+        position: absolute;
+        text-align: center;
+        width: 120px;
+        height: 30px;
+        padding: 2px;
+        font: 12px sans-serif;
+        background: lightsteelblue;
+        border: 0px;
+        border-radius: 8px;
+        pointer-events: none;
+    }
+</style>
 <head>
     <meta charset="UTF-8">
     <script type="text/javascript" src="d3/d3.js"></script>
-    <title>Month Chart</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+    <title>Seasonal Distribution of Algae Blooms</title>
 </head>
 <body onload='init()'>
+<header>
+    <div class="container">
+        <div class="row">
+            <h1 class="logo">Freshwater Harmful Algal Blooms (FHABs) in California</h1>
+            <h4>Puzhou Wang</h4>
+        </div>
+    </div>
+    <div class="container">
+        <div class="row">
+            <h4>Instructions:</h4>
+            <p>Move mouse onto each circle for more details about the data!</p>
+            <p>Click the following button to go back to the first page!</p>
+        </div>
+        <a href='/d3_test/index.html' id='month-chart-button' class="btn btn-default" role="button">
+            FHAB Distribution in Different Counties
+        </a>
+    </div>
+</header>
+<div class="container">
+    <svg></svg>
+</div>
 <script>
     async function init() {
         const bloomData = await d3.csv('resources/fhab_bloomreport.csv', d3.autoType);
@@ -13,57 +49,125 @@
             "July", "August", "September", "October", "November", "December"
         ];
 
-        var selectedCountyID = Number(decodeURI(window.location.search.substring(10)));
+        var countyName = decodeURI(window.location.search.substring(8))
+        d3.csv('resources/ca_counties.csv', d3.autoType).then(function(cacounties){
+            var countyRow = cacounties.filter(function(d){ return d.countyName == countyName });
+            var countyID = countyRow[0].countyID;
 
-        const countyData = bloomData.filter(filterbyCounty);
-        function filterbyCounty(d) {
-            return d.CountyID == selectedCountyID;
-        };
+            const countyData = bloomData.filter(filterbyCounty);
+            function filterbyCounty(d) {
+                return d.CountyID == countyID;
+            };
 
-        console.log(countyData);
+            var countbyMonth = d3.nest()
+                .key(function(d) {return monthNames[d.ObservationDate.getMonth()];})
+                .rollup(function(v) {return v.length;})
+                .entries(countyData)
+                .sort(function(a, b){ return d3.descending(a.value, b.value); });
 
-        var countbyMonth = d3.nest()
-            .key(function(d) {return monthNames[d.ObservationDate.getMonth()];})
-            .rollup(function(v) {return v.length;})
-            .entries(countyData);
+            //Width and height
+            var w = 680;
+            var h = 600;
+            var margin = 40;
+            var padding = 100;
 
-        //Width and height
-        var w = 760;
-        var h = 600;
-        var margin = 80;
+            var svg = d3.select("svg")
+                .attr("width", w)
+                .attr("height", h)
+                .attr('padding', padding);
+            var g = svg.append('g').attr('id', 'seasonalchartcontainer')
+                .attr('transform', 'translate('+margin+','+margin+')');
 
-        var svg = d3.select("body")
-            .append("svg")
-            .attr("width", w)
-            .attr("height", h);
-        var g = svg.append('g').attr('id', 'barchartcontainer')
-            .attr('transform', 'translate('+margin+','+margin+')');
+            var xs = d3.scaleBand().domain(monthNames).range([0, w-2*margin]);
+            var ys = d3.scaleLinear().domain([0, d3.max(countbyMonth.map(d => d.value))]).range([h-4*margin, 0]);
 
-        var xs = d3.scaleBand().domain(monthNames).range([0, w-2*margin]);
-        var ys = d3.scaleLinear().domain([0, d3.max(countbyMonth.map(d => d.value))]).range([h-2*margin, 0]);
-
-        g.selectAll('rect').data(countbyMonth).enter().append('rect')
-            .attr('x', function (d) {
-                return xs(d.key);
-            })
-            .attr('y', function (d) {
-                return ys(d.value);
-            })
-            .attr('width', xs.bandwidth())
-            .attr('height', function (d) {return h-2*margin-ys(d.value);});
-        d3.select('svg').append('g')
-            .attr('transform', 'translate('+margin+','+margin+')')
-            .call(d3.axisLeft(ys));
-        d3.select('svg').append('g')
-            .attr('transform', 'translate('+margin+','+(h-margin)+')')
-            .call(d3.axisBottom(xs))
-            .selectAll("text")
-            .attr("y", 0)
-            .attr("x", -9)
-            .attr("dy", ".35em")
-            .attr("transform", "rotate(270)")
-            .style("text-anchor", "end");
-    }
+            g.selectAll('rect').data(countbyMonth).enter().append('rect')
+                .attr('x', function (d) {
+                    return xs(d.key);
+                })
+                .attr('y', function (d) {
+                    return ys(d.value);
+                })
+                .attr('width', xs.bandwidth())
+                .attr('height', function (d) {return h-4*margin-ys(d.value);})
+                .attr('fill', 'rgb(66, 103, 142)');
+            // add y axis
+            d3.select('svg').append('g')
+                .style("font", "12px times")
+                .attr('transform', 'translate('+margin+','+margin+')')
+                .call(d3.axisLeft(ys));
+            g.append("text")
+                .attr("text-anchor", "middle")
+                .attr("transform", "translate("+ (-padding/4) +","+(h/2-2*margin)+")rotate(-90)")
+                .text("Count");
+            // add x axis
+            d3.select('svg').append('g')
+                .style("font", "12px times")
+                .attr('transform', 'translate('+margin+','+(h-3*margin)+')')
+                .call(d3.axisBottom(xs))
+                .selectAll("text")
+                .attr("y", 0)
+                .attr("x", -8)
+                .attr("dy", ".35em")
+                .attr("transform", "rotate(270)")
+                .style("text-anchor", "end");
+            g.append("text")
+                .attr("text-anchor", "middle")
+                .attr("transform", "translate("+(w/2-margin)+","+(h-2*margin)+")")
+                .text("Month");
+            // add annotation if this is a page for Lake County
+            if (countyName == 'Lake') {
+                d3.select('rect').transition().duration(500).attr('fill', 'rgb(203,90,76)');
+                g.append('line')
+                    .style("stroke", "rgb(255,255,255)")
+                    .style("stroke-width", 3)
+                    .attr("x1", 51)
+                    .attr("y1", 106)
+                    .attr("x2", 90)
+                    .attr("y2", 80)
+                    .transition().duration(1000)
+                    .style("stroke", "rgb(203,90,76)");
+                g.append('text')
+                    .attr('text-anchor', 'start')
+                    .attr('transform', 'translate(100,80)')
+                    .text('Most FHABs happened in January in Lake County!')
+                    .style('fill', 'rgb(255,255,255)')
+                    .transition().duration(1500)
+                    .style('fill', 'rgb(203,90,76)');
+            };
+            // tooltip
+            var div = d3.select("body").append("div")
+                .attr("class", "tooltip")
+                .style("opacity", 0);
+            g.selectAll('rect')
+                .on('mouseover', function(d){
+                    d3.select(this).style("fill", "rgb(252,214,125)");
+                    div.transition()
+                        .duration(200)
+                        .style("opacity", .9);
+                    div.html("Month: " + d.key + "<br/>"  + "Count: " + d.value)
+                        .style("left", (d3.event.pageX) + "px")
+                        .style("top", (d3.event.pageY - 28) + "px");
+                })
+                .on("mouseout", function(d) {
+                    if ((d.key == 'January') && (countyName == 'Lake')) {
+                        d3.select(this).style("fill", "rgb(203,90,76)")
+                    }
+                    else {
+                        d3.select(this).style("fill", "rgb(66, 103, 142)");
+                    };
+                    div.transition()
+                        .duration(500)
+                        .style("opacity", 0);
+                });
+            // add bar chart title
+            svg.append('text')
+                .attr('text-anchor', 'middle')
+                .attr('transform', 'translate('+w/2+','+margin/1.5+')')
+                .text('Number of FHAB in Different Month in '+countyName+' County')
+                .style('font-size', '24px');
+        });
+    };
 </script>
 </body>
 </html>

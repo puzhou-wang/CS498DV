@@ -42,15 +42,18 @@
 </div>
 
 <script type="text/javascript">
-     //Width and height
-    var w = 600;
+    //Width and height
+    var w = 680;
     var h = 600;
+    var margin = 40;
+    var padding = 100;
 
-    //Create SVG element and append map to the SVG
     var svg = d3.select("svg")
         .attr("width", w)
-        .attr("height", h);
-    var g = d3.select('svg').append('g').attr('id', 'countycontainer')
+        .attr("height", h)
+        .attr('padding', padding);
+    var g = svg.append('g').attr('id', 'countycontainer')
+        .attr('transform', 'translate('+margin+','+margin+')');
 
     var countyName = decodeURI(window.location.search.substring(8))
     d3.csv('resources/ca_counties.csv', d3.autoType).then(function(cacounties){
@@ -65,7 +68,9 @@
                 var selectCounty = ca.features.filter(function(d) { return d.properties.NAME == countyName; });
                 var center = d3.geoCentroid(selectCounty[0]);
                 var bounds = d3.geoBounds(selectCounty[0]);
-                scale = scale * 9.4 / (bounds[1][1]-bounds[0][1])
+                var xscale = scale * 10 / (bounds[1][0]-bounds[0][0])
+                var yscale = scale * 10 / (bounds[1][1]-bounds[0][1])
+                scale = (xscale < yscale) ? xscale : yscale;
                 var projection = d3.geoMercator().center(center)
                     .scale(scale).translate(offset);
                 var path = d3.geoPath().projection(projection);
@@ -86,7 +91,11 @@
                             .rollup(function (v) {
                                 return v.length;
                             })
-                            .entries(filterData);
+                            .entries(filterData)
+                            .sort(function(a, b){ return d3.descending(a.value, b.value); });
+
+                        var countMax = countbylocation[0].value;
+
                         g.selectAll('circle').data(countbylocation).enter().append('circle')
                             .attr('cx', function (d) {
                                 return projection([d.key.split(',')[0], d.key.split(',')[1]])[0];
@@ -95,7 +104,7 @@
                                 return projection([d.key.split(',')[0], d.key.split(',')[1]])[1];
                             })
                             .attr("r", function (d) {
-                                return Math.log(d.value + 1) / Math.log(2) * 2;
+                                return Math.log(d.value + 1) / Math.log(2) * 5 / countMax;
                             })
                             .style("fill", "rgb(203,90,76)");
                         // tooltip
@@ -117,8 +126,13 @@
                             });
                     });
             });
-
-        d3.select('#month-chart-button').attr('href', '/d3_test/monthchart.html?countyID='+countyID);
+        // add bar chart title
+        svg.append('text')
+            .attr('text-anchor', 'middle')
+            .attr('transform', 'translate('+w/2+','+margin/1.5+')')
+            .text('Geographical Distribution of FHAB in '+countyName+' County')
+            .style('font-size', '24px');
+        d3.select('#month-chart-button').attr('href', '/d3_test/monthchart.html?county='+countyName);
     });
 
 
